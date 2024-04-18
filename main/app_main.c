@@ -24,36 +24,28 @@
 
 #include "app_priv.h"
 
-////------------Rain Sensor---------------////
+////------------Rain Sensor ---------------////
 #include "driver/gpio.h"
 ////------------Rain Sensor---------------////
-
-
-// //--------Debouncing Rain Maker Buttons Start--------//
-// static int debounce_time=5;
-// //--------Debouncing Rain Maker Buttons End--------//
 
 
 static const char *TAG = "app_main";
 
 esp_rmaker_device_t *switch_device;
-// esp_rmaker_device_t *light_device;
-// esp_rmaker_device_t *fan_device;
-// esp_rmaker_device_t *temp_sensor_device;
 
-////------------Rain Sensor---------------////
+////------------Declare Rain Sensor Start---------------////
 esp_rmaker_device_t *rain_sensor_device;
-////------------Rain Sensor---------------////
+////------------Rain Sensor End---------------////
 
-////------------Limit Switch---------------////
+////------------Declare Limit Switch Start---------------////
 esp_rmaker_device_t *limit_switch_device;
-////------------Limit Switch---------------////
+////------------Declare Limit Switch End---------------////
 
 
-//------------servo switch------------//
+//------------Declare Servo Switch Start------------//
 
 esp_rmaker_device_t *servo_switch_device;
-//------------servo switch------------//
+//------------Declare Servo Switch End------------//
 
 
 /* Callback to handle commands received from the RainMaker cloud */
@@ -80,22 +72,6 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
 
 
     }
-    // else if (strcmp(param_name, ESP_RMAKER_DEF_BRIGHTNESS_NAME) == 0) {
-    //     ESP_LOGI(TAG, "Received value = %d for %s - %s",
-    //             val.val.i, device_name, param_name);
-    // } 
-    // else if (strcmp(param_name, ESP_RMAKER_DEF_SPEED_NAME) == 0) {
-    //     ESP_LOGI(TAG, "Received value = %d for %s - %s",
-    //             val.val.i, device_name, param_name);
-    // } 
-
-    // //-------------Servo Switch Start-------------//
-    // else if (strcmp(device_name, "servo_switch_device") == 0) 
-    // {
-    //     servo_switch_event(val.val.b);
-    // } 
-    // //-------------Servo Switch End-------------//
-
 
     else {
         /* Silently ignoring invalid params */
@@ -151,48 +127,25 @@ void app_main()
     esp_rmaker_device_add_cb(switch_device, write_cb, NULL);
     esp_rmaker_node_add_device(node, switch_device);
 
-    /* Create a Light device and add the relevant parameters to it */
-    // light_device = esp_rmaker_lightbulb_device_create("Light", NULL, DEFAULT_LIGHT_POWER);
-    // esp_rmaker_device_add_cb(light_device, write_cb, NULL);
-    
-    // esp_rmaker_device_add_param(light_device,
-    //         esp_rmaker_brightness_param_create(ESP_RMAKER_DEF_BRIGHTNESS_NAME, DEFAULT_LIGHT_BRIGHTNESS));
-    
-    // esp_rmaker_device_add_attribute(light_device, "Serial Number", "012345");
-    // esp_rmaker_device_add_attribute(light_device, "MAC", "xx:yy:zz:aa:bb:cc");
-
-    // esp_rmaker_node_add_device(node, light_device);
-    
-    /* Create a Fan device and add the relevant parameters to it */
-    // fan_device = esp_rmaker_fan_device_create("Fan", NULL, DEFAULT_FAN_POWER);
-    // esp_rmaker_device_add_cb(fan_device, write_cb, NULL);
-    // esp_rmaker_device_add_param(fan_device, esp_rmaker_speed_param_create(ESP_RMAKER_DEF_SPEED_NAME, DEFAULT_FAN_SPEED));
-    // esp_rmaker_node_add_device(node, fan_device);
-    
-    /* Create a Temperature Sensor device and add the relevant parameters to it */
-    // temp_sensor_device = esp_rmaker_temp_sensor_device_create("Temperature Sensor", NULL, app_get_current_temperature());
-    // esp_rmaker_node_add_device(node, temp_sensor_device);
-
-    //-----------Create Rain Sensor Device On App--------------//
+    //-----------Create Rain Sensor Device On App Start--------------//
     rain_sensor_device = esp_rmaker_temp_sensor_device_create("Rain Sensor", NULL, app_get_current_rain_sensor());
     ESP_LOGE(TAG, "Create Rain Sensor Device!!!!!");
-    // rain_sensor_device = esp_rmaker_temp_sensor_device_create("Rain Sensor", NULL, true);
     esp_rmaker_node_add_device(node, rain_sensor_device);
-    //-----------Create Rain Sensor Device On App--------------//
+    //-----------Create Rain Sensor Device On App End--------------//
 
 
-    //-----------Create Limit Switch Device On App--------------//
+    //-----------Create Limit Switch Device On App Start--------------//
     limit_switch_device = esp_rmaker_temp_sensor_device_create("Limit Switch Device", NULL, app_get_current_limit_switch());
     ESP_LOGE(TAG, "Create Limit Switch Device!!!!!");
     esp_rmaker_node_add_device(node, limit_switch_device);
-    //-----------Create Limit Switch Device On App--------------//
+    //-----------Create Limit Switch Device On App End--------------//
 
 
-    //-----------Create Servo Switch Device On App--------------//
+    //-----------Create Servo Switch Device On App Start--------------//
     servo_switch_device = esp_rmaker_switch_device_create("Servo Switch", NULL, false);
     esp_rmaker_device_add_cb(servo_switch_device, write_cb, NULL);
     esp_rmaker_node_add_device(node, servo_switch_device);
-    //-----------Create Servo Switch Device On App--------------//
+    //-----------Create Servo Switch Device On App Endd--------------//
 
 
 

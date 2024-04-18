@@ -57,7 +57,7 @@
 //-----------Limit Switch PIN Declaration End--------------//
 
 //-----------Servo Switch PIN Declaration Start--------------//
-#define Servo_SWITCH_PIN     18 // does nothing for now
+#define Servo_SWITCH_PIN     18
 //-----------Servo Switch PIN Declaration End--------------//
 
 
@@ -66,16 +66,14 @@
 //------------Servo Declaration Start---------------//
 #define SERVO_MIN_PULSEWIDTH_US 500  // Minimum pulse width in microsecond
 #define SERVO_MAX_PULSEWIDTH_US 2500  // Maximum pulse width in microsecond
-#define SERVO_MIN_DEGREE        -80   // Minimum angle
-#define SERVO_MAX_DEGREE        10    // Maximum angle
+#define SERVO_MIN_DEGREE        -80   // Minimum angle based on window mount
+#define SERVO_MAX_DEGREE        10    // Maximum angle based on window mount
 
 #define SERVO_PULSE_GPIO             0        // GPIO connects to the PWM signal line
 #define SERVO_TIMEBASE_RESOLUTION_HZ 1000000  // 1MHz, 1us per tick
 #define SERVO_TIMEBASE_PERIOD        20000    // 20000 ticks, 20ms
 
-
-// static const char *TAG = "servo";
-static int servo_angle = -30;
+static int servo_angle = -30; //declare servo angle default angle
 //------------Servo Declaration End---------------//
 
 
@@ -100,33 +98,7 @@ static bool servo_switch_state = DEFAULT_SERVO_SWITCH;
 //-----------Servo Switch Variables declaration End--------------//
 
 
-
-
-// static float g_temperature = DEFAULT_TEMPERATURE;
 static TimerHandle_t sensor_timer;
-
-// static void app_sensor_update(TimerHandle_t handle)
-// {
-//     static float delta = 0.5;
-//     g_temperature += delta;
-//     if (g_temperature > 99) {
-//         delta = -0.5;
-//     } else if (g_temperature < 1) {
-//         delta = 0.5;
-//     }
-//     esp_rmaker_param_update_and_report(
-//                 esp_rmaker_device_get_param_by_type(temp_sensor_device, ESP_RMAKER_PARAM_TEMPERATURE),
-//                 esp_rmaker_float(g_temperature));
-// }
-
-// float app_get_current_temperature()
-// {
-//     return g_temperature;
-// }
-
-
-
-
 
 
 //---------------Servo Methods Start-----------//
@@ -172,8 +144,6 @@ static void servo_movement(int angle)
     };
     ESP_ERROR_CHECK(mcpwm_new_generator(oper, &generator_config, &generator));
 
-    // // set the initial compare value, so that the servo will spin to the center position
-    // ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(comparator, angle_to_compare(0)));
 
     // ESP_LOGI(TAG, "Set generator action on timer and compare event");
     // go high on counter empty
@@ -191,14 +161,13 @@ static void servo_movement(int angle)
     vTaskDelay(pdMS_TO_TICKS(3000));
 
 
-    //remove generator comparator operator and timer if not will have error after a few cycles
+    //--------Remove generator comparator operator and timer if not will have error after a few cycles---------//
     ESP_ERROR_CHECK(mcpwm_del_generator(generator));
     ESP_ERROR_CHECK(mcpwm_del_comparator(comparator));
     ESP_ERROR_CHECK(mcpwm_del_operator(oper));
     ESP_ERROR_CHECK(mcpwm_timer_disable(timer));
     ESP_ERROR_CHECK(mcpwm_del_timer(timer));
 }
-
 
 //---------------Servo Methods End-----------//
 
@@ -212,30 +181,16 @@ static void app_indicator_set(bool state)
     }
 }
 
-// static void set_limit_power_state(bool target)
-// {
-//     gpio_set_level(OUTPUT_GPIO, target);
-//     app_indicator_set(target);
-// }
-
-// int IRAM_ATTR app_driver_set_limit_state(bool state)
-// {
-//     if(limit_switch_state != state) {
-//         limit_switch_state = state;
-//         set_limit_power_state(limit_switch_state);
-//     }
-//     return ESP_OK;
-// }
-
 //-----------Limit Switch Events Start-------------//
 static void limit_switch_press_event(void *arg)
 {
-    limit_switch_state=false;
-    // if possible use a interupt for the motor here//
+    limit_switch_state=false; //set state to false
 
+    //update on rain maker app's element the new limit_switch state
     esp_rmaker_param_update_and_report(
                 esp_rmaker_device_get_param_by_type(limit_switch_device, ESP_RMAKER_PARAM_TEMPERATURE),
-                esp_rmaker_float(limit_switch_state)); //esp_rmaker_param: New param value type not same as the existing one. if change to bool
+                esp_rmaker_float(limit_switch_state));
+    //esp_rmaker_param: New param value type not same as the existing one error if change to bool thus we use float and 0 as flase 1 as true
 }
 
 
@@ -244,7 +199,8 @@ static void limit_switch_release_event(void *arg)
     limit_switch_state=true;
     esp_rmaker_param_update_and_report(
                 esp_rmaker_device_get_param_by_type(limit_switch_device, ESP_RMAKER_PARAM_TEMPERATURE),
-                esp_rmaker_float(limit_switch_state)); //esp_rmaker_param: New param value type not same as the existing one. if change to bool
+                esp_rmaker_float(limit_switch_state));
+    //esp_rmaker_param: New param value type not same as the existing one error if change to bool thus we use float and 0 as flase 1 as true
 }
 //-----------Limit Switch Events End-------------//
 
@@ -254,19 +210,6 @@ static void limit_switch_release_event(void *arg)
 //-----------Servo Switch Event Start-------------//
 static void servo_switch_event(void *arg)
 {
-    // if(app_driver_set_servo_switch_state(!servo_switch_state)==ESP_FAIL)
-    // {
-    //     esp_rmaker_raise_alert("Smt Failed"); //----send notification-----//
-    // }
-    // else
-    // {
-    // bool new_servo_switch_state = !servo_switch_state;
-    // app_driver_set_servo_switch_state(new_servo_switch_state);
-    // esp_rmaker_param_update_and_report(
-    //         esp_rmaker_device_get_param_by_type(servo_switch_device, ESP_RMAKER_PARAM_POWER),
-    //         esp_rmaker_bool(new_servo_switch_state));
-    // }
-
     // ESP_LOGI(TAG, "----servo_switch_state before is %d",servo_switch_state);
     if(servo_check_move(!servo_switch_state)==true)
     {
@@ -280,31 +223,31 @@ static void servo_switch_event(void *arg)
 
 }
 
-
 //-----------Servo Switch Event End-------------//
+
 
 
 //-----------Servo Switch Check Move Servo Start-------------//
 bool servo_check_move(bool servo_switch_state)
 {
     // ESP_LOGI(TAG, "Limit Switch is %d servo_switch_state is %d",limit_switch_state,servo_switch_state);
-    if(servo_switch_state==true && limit_switch_state==false)//opened windown trying to close
+    if(servo_switch_state==true && limit_switch_state==false)//opened window position trying to close
     {
         esp_rmaker_raise_alert("Closing Window!!!!"); //----send notification-----//
         servo_angle=5;
         servo_movement(servo_angle);
         return true;
     }
-    else if(servo_switch_state==false)//servo_switch_state= false means closed windown trying to open
+    else if(servo_switch_state==false)//servo_switch_state= false means closed positon next action is to try opening window
     {
-        esp_rmaker_raise_alert("Opening Window!!!!"); //----send notification-----//
+        esp_rmaker_raise_alert("Opening Window!!!!"); //----send notification to user device-----//
         servo_angle=-30;
         servo_movement(servo_angle);
         return true;
     }
     else
     {
-        esp_rmaker_raise_alert("Error!!!!!!"); //----send notification-----//
+        esp_rmaker_raise_alert("Not Closing! Limit Switch is Pressed!"); //----send notification-----//
         return false;
     }
     
@@ -427,17 +370,6 @@ void app_driver_init()
     app_sensor_init();
 
 
-
-    // // ------------Rain Sensor---------------//
-    // button_handle_t rain_sensor_handle = iot_button_create(RAIN_SENSOR_PIN, RAIN_SENSOR_ACTIVE_LEVEL);
-    // if (rain_sensor_handle) {
-    //     /* Register a callback for a button tap (short press) event */
-    //     iot_button_set_evt_cb(rain_sensor_handle, BUTTON_CB_TAP, rain_sensor_event, "TAP");
-    // }
-    // // ------------Rain Sensor---------------//
-
-
-
     //-----------Limit Switch --------------//
 
     button_handle_t limit_switch_handle = iot_button_create(LIMIT_SWITCH_PIN, BUTTON_ACTIVE_LEVEL);
@@ -466,30 +398,6 @@ int IRAM_ATTR app_driver_set_state(bool state)
     return ESP_OK;
 }
 
-
-// //-----------Servo Switch State Start --------------//
-// int IRAM_ATTR app_driver_set_servo_switch_state(bool state)
-// {
-//     if(servo_switch_state != state) {
-//         servo_switch_state = state;
-//         if(servo_check_move(servo_switch_state))
-//         {
-//             return ESP_OK;
-//         }
-//         else
-//         {
-//             return ESP_FAIL;
-//         }
-//     }
-//     // else
-//     // {
-//     //     servo_check_move(state);
-//     //     // servo_switch_state=!state;
-//     // }
-//     return ESP_OK;
-// }
-
-//-----------Servo Switch State End --------------//
 
 bool app_driver_get_state(void)
 {
